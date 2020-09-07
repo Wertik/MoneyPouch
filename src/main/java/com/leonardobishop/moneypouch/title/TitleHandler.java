@@ -2,10 +2,8 @@ package com.leonardobishop.moneypouch.title;
 
 import org.bukkit.entity.Player;
 
-public class Title_Other implements Title {
-
-    @Override
+public class TitleHandler {
     public void sendTitle(Player player, String message, String submessage) {
-        // title function does not exist
+        player.sendTitle(message, submessage, 0, 50, 20);
     }
 }

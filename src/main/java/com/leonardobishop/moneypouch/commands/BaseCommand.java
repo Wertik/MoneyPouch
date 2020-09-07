@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 
 public class BaseCommand implements CommandExecutor {
 
-    private MoneyPouch plugin;
+    private final MoneyPouch plugin;
 
     public BaseCommand(MoneyPouch plugin) {
         this.plugin = plugin;
@@ -67,7 +67,7 @@ public class BaseCommand implements CommandExecutor {
             }
 
             Pouch pouch = null;
-            for (Pouch p: plugin.getPouches()) {
+            for (Pouch p : plugin.getPouches()) {
                 if (p.getId().equals(args[0])) {
                     pouch = p;
                     break;

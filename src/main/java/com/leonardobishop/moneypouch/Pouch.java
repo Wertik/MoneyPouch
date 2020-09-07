@@ -5,11 +5,11 @@ import org.bukkit.inventory.ItemStack;
 
 public class Pouch {
 
-    private String id;
-    private long minRange;
-    private long maxRange;
-    private ItemStack itemStack;
-    private EconomyType economyType;
+    private final String id;
+    private final long minRange;
+    private final long maxRange;
+    private final ItemStack itemStack;
+    private final EconomyType economyType;
 
     public Pouch(String id, long minRange, long maxRange, ItemStack itemStack, EconomyType economyType) {
         this.id = id;

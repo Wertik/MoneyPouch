@@ -1,19 +1,16 @@
 package com.leonardobishop.moneypouch;
 
+import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.leonardobishop.moneypouch.commands.BaseCommand;
 import com.leonardobishop.moneypouch.economytype.EconomyType;
 import com.leonardobishop.moneypouch.economytype.VaultEconomyType;
 import com.leonardobishop.moneypouch.economytype.XPEconomyType;
 import com.leonardobishop.moneypouch.events.UseEvent;
-import com.leonardobishop.moneypouch.title.Title;
-import com.leonardobishop.moneypouch.title.Title_Bukkit;
-import com.leonardobishop.moneypouch.title.Title_BukkitNoTimings;
-import com.leonardobishop.moneypouch.title.Title_Other;
-import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
+import com.leonardobishop.moneypouch.title.TitleHandler;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -24,31 +21,15 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MoneyPouch extends JavaPlugin {
 
-    private Title titleHandle;
+    private TitleHandler titleHandler;
 
-    private HashMap<String, EconomyType> economyTypes = new HashMap<>();
+    private final HashMap<String, EconomyType> economyTypes = new HashMap<>();
 
-    private EconomyType getEconomyType(String id) {
-        switch (id.toLowerCase()) {
-            case "vault":
-                if (!economyTypes.containsKey("Vault")) economyTypes.put("Vault", new VaultEconomyType(
-                                this.getConfig().getString("economy.prefixes.vault", "$"),
-                                this.getConfig().getString("economy.suffixes.vault", "")));
-                return economyTypes.get("Vault");
-            case "xp":
-                if (!economyTypes.containsKey("XP")) economyTypes.put("XP", new XPEconomyType(
-                        this.getConfig().getString("economy.prefixes.xp", ""),
-                        this.getConfig().getString("economy.suffixes.xp", " XP")));
-                return economyTypes.get("XP");
-            default:
-                return null;
-        }
-    }
-
-    private ArrayList<Pouch> pouches = new ArrayList<>();
+    private final ArrayList<Pouch> pouches = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -83,19 +64,6 @@ public class MoneyPouch extends JavaPlugin {
         super.getServer().getPluginManager().registerEvents(new UseEvent(this), this);
     }
 
-    public String getMessage(Message message) {
-        return ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("messages."
-                + message.getId(), message.getDef()));
-    }
-
-    public ArrayList<Pouch> getPouches() {
-        return pouches;
-    }
-
-    public Title getTitleHandle() {
-        return titleHandle;
-    }
-
     @Override
     public void reloadConfig() {
         super.reloadConfig();
@@ -114,101 +82,106 @@ public class MoneyPouch extends JavaPlugin {
         }
     }
 
+    private EconomyType getEconomyType(String id) {
+        switch (id.toLowerCase()) {
+            case "vault":
+                if (!economyTypes.containsKey("Vault")) economyTypes.put("Vault", new VaultEconomyType(
+                        this.getConfig().getString("economy.prefixes.vault", "$"),
+                        this.getConfig().getString("economy.suffixes.vault", "")));
+                return economyTypes.get("Vault");
+            case "xp":
+                if (!economyTypes.containsKey("XP")) economyTypes.put("XP", new XPEconomyType(
+                        this.getConfig().getString("economy.prefixes.xp", ""),
+                        this.getConfig().getString("economy.suffixes.xp", " XP")));
+                return economyTypes.get("XP");
+            default:
+                return null;
+        }
+    }
+
+    public String getMessage(Message message) {
+        return ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("messages."
+                + message.getId(), message.getDef()));
+    }
+
+    public ArrayList<Pouch> getPouches() {
+        return pouches;
+    }
+
+    public TitleHandler getTitleHandle() {
+        return titleHandler;
+    }
+
+    public String color(String str) {
+        return str == null ? null : ChatColor.translateAlternateColorCodes('&', str);
+    }
+
     public ItemStack getItemStack(String path, FileConfiguration config) {
-        String cName = config.getString(path + ".name", path + ".name");
-        String cType = config.getString(path + ".item", path + ".item");
-        List<String> cLore = config.getStringList(path + ".lore");
 
-        String name;
-        Material type = null;
-        int data = 0;
-        List<String> lore = new ArrayList<>();
-        if (cLore != null) {
-            for (String s : cLore) {
-                lore.add(ChatColor.translateAlternateColorCodes('&', s));
-            }
-        }
-        name = ChatColor.translateAlternateColorCodes('&', cName);
-
-        if (StringUtils.isNumeric(cType)) {
-            type = Material.getMaterial(Integer.parseInt(cType));
-        } else if (Material.getMaterial(cType) != null) {
-            type = Material.getMaterial(cType);
-        } else if (cType.contains(":")) {
-            String[] parts = cType.split(":");
-            if (parts.length > 1) {
-                if (StringUtils.isNumeric(parts[0])) {
-                    type = Material.getMaterial(Integer.parseInt(parts[0]));
-                } else if (Material.getMaterial(parts[0]) != null) {
-                    type = Material.getMaterial(parts[0]);
-                }
-                if (StringUtils.isNumeric(parts[1])) {
-                    data = Integer.parseInt(parts[1]);
-                }
-            }
+        String typeString = config.getString(path + ".item", path + ".item");
+        if (Strings.isNullOrEmpty(typeString)) {
+            getLogger().severe("Invalid material set for the pouches, cannot give.");
+            return null;
         }
 
+        Material type = Material.matchMaterial(typeString);
         if (type == null) {
-            type = Material.STONE;
+            getLogger().severe("Invalid material set for the pouches, cannot give.");
+            return null;
         }
 
+        int data = 0;
 
-        ItemStack is = new ItemStack(type, 1, (short) data);
-        ItemMeta ism = is.getItemMeta();
-        ism.setLore(lore);
-        ism.setDisplayName(name);
-        is.setItemMeta(ism);
+        String name = config.getString(path + ".name", path + ".name");
+        List<String> lore = config.getStringList(path + ".lore");
+
+        lore = lore.stream()
+                .map(this::color)
+                .collect(Collectors.toList());
+        name = color(name);
+
+        ItemStack item = new ItemStack(type, 1, (short) data);
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            getLogger().severe("Could not create pouch. Bukkit failed to provide clean ItemMeta.");
+            return null;
+        }
+
+        meta.setLore(lore);
+        meta.setDisplayName(name);
+        item.setItemMeta(meta);
 
         if (config.isSet(path + ".enchantments")) {
             for (String key : getConfig().getStringList(path + ".enchantments")) {
+
                 String[] split = key.split(":");
-                String ench = split[0];
-                String level = null;
-                if (split.length == 2) {
-                    level = split[1];
-                } else {
-                    level = "1";
+                String enchantmentName = split[0];
+
+                int level = 1;
+
+                if (split.length > 1)
+                    try {
+                        level = Integer.parseInt(split[1]);
+                    } catch (NumberFormatException e) {
+                        getLogger().warning("Could not parse enchantment level for " + enchantmentName);
+                    }
+
+                Enchantment enchantment = Enchantment.getByKey(new NamespacedKey(this, enchantmentName));
+                if (enchantment == null) {
+                    getLogger().warning("Could not parse enchantment " + enchantmentName);
+                    continue;
                 }
 
-                if (Enchantment.getByName(ench) == null) continue;
-
-                try {
-                    Integer.parseInt(level);
-                } catch (NumberFormatException e) {
-                    level = "1";
-                }
-
-                is.addUnsafeEnchantment(Enchantment.getByName(ench), Integer.parseInt(level));
+                item.addUnsafeEnchantment(enchantment, level);
             }
         }
 
-        return is;
+        return item;
     }
 
     private void setupTitle() {
-        String version;
-        try {
-            version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            titleHandle = new Title_Bukkit();
-            this.getLogger().info("Your server version could not be detected. Titles have been enabled, although they may not work!");
-            return;
-        }
-        getLogger().info("Your server is running version " + version + ".");
-        if (version.startsWith("v1_7")) {
-            titleHandle = new Title_Other();
-        } else if (version.startsWith("v1_8") || version.startsWith("v1_9") || version.startsWith("v1_10")) {
-            titleHandle = new Title_BukkitNoTimings();
-        } else {
-            titleHandle = new Title_Bukkit();
-        }
-        if (titleHandle instanceof Title_Bukkit) {
-            this.getLogger().info("Titles have been enabled.");
-        } else if (titleHandle instanceof Title_BukkitNoTimings) {
-            this.getLogger().info("Titles have been enabled, although they have limited timings.");
-        } else {
-            this.getLogger().info("Titles are not supported for this version.");
-        }
+        this.titleHandler = new TitleHandler();
     }
 
     public enum Message {

@@ -43,5 +43,4 @@ public class VaultEconomyType extends EconomyType {
     public String toString() {
         return "Vault";
     }
-
 }

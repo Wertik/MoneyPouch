@@ -20,5 +20,4 @@ public class XPEconomyType extends EconomyType {
     public String toString() {
         return "XP";
     }
-
 }
