@@ -43,14 +43,14 @@ public class UseEvent implements Listener {
 
         for (Pouch p : plugin.getPouches()) {
 
+            EquipmentSlot slot = detectSlot(player, p.getItemStack());
+
+            if (slot == null) continue;
+
             if (opening.contains(player.getUniqueId())) {
                 player.sendMessage(plugin.getMessage(MoneyPouch.Message.ALREADY_OPENING));
                 return;
             }
-
-            EquipmentSlot slot = detectSlot(player, p.getItemStack());
-
-            if (slot == null) continue;
 
             event.setCancelled(true);
 
