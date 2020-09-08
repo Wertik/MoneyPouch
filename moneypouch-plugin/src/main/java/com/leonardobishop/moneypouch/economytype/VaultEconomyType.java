@@ -10,19 +10,16 @@ import java.util.logging.Level;
 public class VaultEconomyType extends EconomyType {
 
     private static Economy economy = null;
-    private boolean fail = false;
 
     public VaultEconomyType(String prefix, String suffix) {
         super(prefix, suffix);
 
         if (Bukkit.getServer().getPluginManager().getPlugin("Vault") == null) {
-            fail = true;
             Bukkit.getPluginManager().getPlugin("MoneyPouch").getLogger().log(Level.SEVERE, "Failed to hook Vault!");
             return;
         }
         RegisteredServiceProvider<Economy> rsp = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            fail = true;
             Bukkit.getPluginManager().getPlugin("MoneyPouch").getLogger().log(Level.SEVERE, "Failed to hook Vault!");
             return;
         }
@@ -31,7 +28,7 @@ public class VaultEconomyType extends EconomyType {
 
     @Override
     public void processPayment(Player player, long amount) {
-        if (fail) {
+        if (economy == null) {
             Bukkit.getPluginManager().getPlugin("MoneyPouch").getLogger().log(Level.SEVERE, "Failed to process payment: Failed to hook Vault!");
             return;
         }

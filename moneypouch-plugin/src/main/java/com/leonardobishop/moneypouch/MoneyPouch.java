@@ -7,7 +7,7 @@ import com.leonardobishop.moneypouch.economytype.EconomyType;
 import com.leonardobishop.moneypouch.economytype.VaultEconomyType;
 import com.leonardobishop.moneypouch.economytype.XPEconomyType;
 import com.leonardobishop.moneypouch.events.UseEvent;
-import com.leonardobishop.moneypouch.title.TitleHandler;
+import com.leonardobishop.moneypouch.version.VersionUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class MoneyPouch extends JavaPlugin {
 
-    private TitleHandler titleHandler;
+    private VersionUtil versionUtil;
 
     private final HashMap<String, EconomyType> economyTypes = new HashMap<>();
 
@@ -33,6 +33,9 @@ public class MoneyPouch extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
+        this.versionUtil = new VersionUtil();
+
         File directory = new File(String.valueOf(this.getDataFolder()));
         if (!directory.exists() && !directory.isDirectory()) {
             directory.mkdir();
@@ -56,11 +59,10 @@ public class MoneyPouch extends JavaPlugin {
                 super.getLogger().severe(ChatColor.RED + "...please delete the MoneyPouch directory and try RESTARTING (not reloading).");
             }
         }
+
         this.reloadConfig();
-        this.setupTitle();
 
-
-        super.getServer().getPluginCommand("moneypouch").setExecutor(new BaseCommand(this));
+        super.getServer().getPluginCommand("com/leonardobishop/moneypouch").setExecutor(new BaseCommand(this));
         super.getServer().getPluginManager().registerEvents(new UseEvent(this), this);
     }
 
@@ -80,6 +82,10 @@ public class MoneyPouch extends JavaPlugin {
 
             pouches.add(new Pouch(s.replace(" ", "_"), priceMin, priceMax, is, economyType));
         }
+    }
+
+    public VersionUtil getVersionUtil() {
+        return versionUtil;
     }
 
     private EconomyType getEconomyType(String id) {
@@ -106,10 +112,6 @@ public class MoneyPouch extends JavaPlugin {
 
     public ArrayList<Pouch> getPouches() {
         return pouches;
-    }
-
-    public TitleHandler getTitleHandle() {
-        return titleHandler;
     }
 
     public String color(String str) {
@@ -178,10 +180,6 @@ public class MoneyPouch extends JavaPlugin {
         }
 
         return item;
-    }
-
-    private void setupTitle() {
-        this.titleHandler = new TitleHandler();
     }
 
     public enum Message {

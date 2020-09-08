@@ -146,7 +146,7 @@ public class UseEvent implements Listener {
                         }
                     }
 
-                    plugin.getTitleHandle().sendTitle(player, prefix + viewedTitle.toString() + suffix,
+                    plugin.getVersionUtil().getCurrentProvider().sendTitle(player, prefix + viewedTitle.toString() + suffix,
                             plugin.color(plugin.getConfig().getString("pouches.title.subtitle")));
                 }
 
