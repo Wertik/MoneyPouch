@@ -83,4 +83,4 @@ messages:
   give-item: "&6Given &e%player% %item%&6."
   receive-item: "&6You have been given %item%&6."
   prize-message: "&6You have received &c%prefix%%prize%%suffix%&6!"
-  aready-opening: "&cPlease wait for your current pouch opening to complete first!"
+  already-opening: "&cPlease wait for your current pouch opening to complete first!"
