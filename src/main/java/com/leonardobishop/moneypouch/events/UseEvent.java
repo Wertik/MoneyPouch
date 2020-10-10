@@ -1,7 +1,9 @@
 package com.leonardobishop.moneypouch.events;
 
-import com.leonardobishop.moneypouch.MoneyPouch;
-import com.leonardobishop.moneypouch.Pouch;
+import com.leonardobishop.moneypouch.Message;
+import com.leonardobishop.moneypouch.pouch.Pouch;
+import com.leonardobishop.moneypouch.PouchPlugin;
+import com.leonardobishop.moneypouch.StringUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -22,10 +24,11 @@ import java.util.logging.Level;
 
 public class UseEvent implements Listener {
 
-    private final MoneyPouch plugin;
+    private final PouchPlugin plugin;
+
     private final ArrayList<UUID> opening = new ArrayList<>();
 
-    public UseEvent(MoneyPouch plugin) {
+    public UseEvent(PouchPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -33,6 +36,7 @@ public class UseEvent implements Listener {
     public void onPlayerUse(PlayerInteractEvent event) {
 
         Player player = event.getPlayer();
+
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
             return;
         }
@@ -41,22 +45,22 @@ public class UseEvent implements Listener {
             return;
         }
 
-        for (Pouch p : plugin.getPouches()) {
+        for (Pouch pouch : plugin.getPouchManager().getPouches()) {
 
-            EquipmentSlot slot = detectSlot(player, p.getItemStack());
+            EquipmentSlot slot = detectSlot(player, pouch.getItemStack());
 
             if (slot == null) continue;
 
+            event.setCancelled(true);
+
             if (opening.contains(player.getUniqueId())) {
-                player.sendMessage(plugin.getMessage(MoneyPouch.Message.ALREADY_OPENING));
+                player.sendMessage(Message.ALREADY_OPENING.get());
                 return;
             }
 
-            event.setCancelled(true);
-
             consume(slot, player);
 
-            usePouch(player, p);
+            usePouch(player, pouch);
         }
     }
 
@@ -85,14 +89,12 @@ public class UseEvent implements Listener {
 
         new BukkitRunnable() {
             int position = 0;
-            final String prefixColour = ChatColor.translateAlternateColorCodes('&',
-                    plugin.getConfig().getString("pouches.title.prefix-colour"));
-            final String suffixColour = ChatColor.translateAlternateColorCodes('&',
-                    plugin.getConfig().getString("pouches.title.suffix-colour"));
-            final String revealColour = ChatColor.translateAlternateColorCodes('&',
-                    plugin.getConfig().getString("pouches.title.reveal-colour"));
-            final String obfuscateColour = ChatColor.translateAlternateColorCodes('&',
-                    plugin.getConfig().getString("pouches.title.obfuscate-colour"));
+
+            final String prefixColour = StringUtil.color(plugin.getConfig().getString("pouches.title.prefix-colour"));
+            final String suffixColour = StringUtil.color(plugin.getConfig().getString("pouches.title.suffix-colour"));
+            final String revealColour = StringUtil.color(plugin.getConfig().getString("pouches.title.reveal-colour"));
+            final String obfuscateColour = StringUtil.color(plugin.getConfig().getString("pouches.title.obfuscate-colour"));
+
             final String obfuscateDigitChar = plugin.getConfig().getString("pouches.title.obfuscate-digit-char", "#");
             final String obfuscateDelimiterChar = ",";
             final boolean delimiter = plugin.getConfig().getBoolean("pouches.title.format.enabled", false);
@@ -147,7 +149,7 @@ public class UseEvent implements Listener {
                     }
 
                     plugin.getTitleHandle().sendTitle(player, prefix + viewedTitle.toString() + suffix,
-                            plugin.color(plugin.getConfig().getString("pouches.title.subtitle")));
+                            StringUtil.color(plugin.getConfig().getString("pouches.title.subtitle")));
                 }
 
                 if (position == number.length()) {
@@ -155,7 +157,7 @@ public class UseEvent implements Listener {
                     this.cancel();
                     if (player.isOnline()) {
                         player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("pouches.sound.endsound")), 3, 1);
-                        player.sendMessage(plugin.getMessage(MoneyPouch.Message.PRIZE_MESSAGE)
+                        player.sendMessage(Message.PRIZE_MESSAGE.get()
                                 .replace("%prefix%", p.getEconomyType().getPrefix())
                                 .replace("%suffix%", p.getEconomyType().getSuffix())
                                 .replace("%prize%", String.valueOf(random)));

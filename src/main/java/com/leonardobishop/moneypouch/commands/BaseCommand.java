@@ -1,7 +1,8 @@
 package com.leonardobishop.moneypouch.commands;
 
-import com.leonardobishop.moneypouch.MoneyPouch;
-import com.leonardobishop.moneypouch.Pouch;
+import com.leonardobishop.moneypouch.Message;
+import com.leonardobishop.moneypouch.PouchPlugin;
+import com.leonardobishop.moneypouch.pouch.Pouch;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -11,16 +12,16 @@ import org.bukkit.entity.Player;
 
 public class BaseCommand implements CommandExecutor {
 
-    private final MoneyPouch plugin;
+    private final PouchPlugin plugin;
 
-    public BaseCommand(MoneyPouch plugin) {
+    public BaseCommand(PouchPlugin plugin) {
         this.plugin = plugin;
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (args.length > 0) {
             if (args[0].equals("list")) {
-                for (Pouch pouch : plugin.getPouches()) {
+                for (Pouch pouch : plugin.getPouchManager().getPouches()) {
                     sender.sendMessage(ChatColor.DARK_PURPLE + pouch.getId() + " " + ChatColor.LIGHT_PURPLE + "(min: " +
                             pouch.getMinRange() + ", max: " + pouch.getMaxRange() + ", economy: " +
                             pouch.getEconomyType().toString() + " [" + pouch.getEconomyType().getPrefix() +
@@ -28,8 +29,8 @@ public class BaseCommand implements CommandExecutor {
                 }
                 return true;
             } else if (args[0].equals("reload")) {
-                plugin.reloadConfig();
-                sender.sendMessage(ChatColor.GRAY + "MoneyPouch has been reloaded");
+                plugin.reload();
+                sender.sendMessage(ChatColor.GRAY + "MoneyPouch has been reloaded.");
                 return true;
             }
 
@@ -66,19 +67,15 @@ public class BaseCommand implements CommandExecutor {
                 return true;
             }
 
-            Pouch pouch = null;
-            for (Pouch p : plugin.getPouches()) {
-                if (p.getId().equals(args[0])) {
-                    pouch = p;
-                    break;
-                }
-            }
+            Pouch pouch = plugin.getPouchManager().getPouch(args[0]);
+
             if (pouch == null) {
                 sender.sendMessage(ChatColor.RED + "The pouch " + ChatColor.DARK_RED + args[0] + ChatColor.RED + " could not be found.");
                 return true;
             }
+
             if (target.getInventory().firstEmpty() == -1) {
-                sender.sendMessage(plugin.getMessage(MoneyPouch.Message.FULL_INV));
+                sender.sendMessage(Message.FULL_INV.get());
                 return true;
             }
 
@@ -86,10 +83,11 @@ public class BaseCommand implements CommandExecutor {
                 target.getInventory().addItem(pouch.getItemStack());
             }
 
-            sender.sendMessage(plugin.getMessage(MoneyPouch.Message.GIVE_ITEM).replace("%player%",
-                    target.getName()).replace("%item%", pouch.getItemStack().getItemMeta().getDisplayName()));
+            sender.sendMessage(Message.GIVE_ITEM.get().replace("%player%", target.getName())
+                    .replace("%item%", pouch.getItemStack().getItemMeta().getDisplayName()));
+
             if (plugin.getConfig().getBoolean("options.show-receive-message", true)) {
-                target.sendMessage(plugin.getMessage(MoneyPouch.Message.RECEIVE_ITEM).replace("%player%",
+                target.sendMessage(Message.RECEIVE_ITEM.get().replace("%player%",
                         target.getName()).replace("%item%", pouch.getItemStack().getItemMeta().getDisplayName()));
             }
             return true;

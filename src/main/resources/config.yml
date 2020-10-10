@@ -1,5 +1,6 @@
 pouches:
   tier:
+
     # Define pouches here
     vault-1:
       name: "&2&lTier I Money Pouch &r&7(Right Click)"

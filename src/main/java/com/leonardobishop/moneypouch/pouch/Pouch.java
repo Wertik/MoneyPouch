@@ -1,4 +1,4 @@
-package com.leonardobishop.moneypouch;
+package com.leonardobishop.moneypouch.pouch;
 
 import com.leonardobishop.moneypouch.economytype.EconomyType;
 import org.bukkit.inventory.ItemStack;
@@ -6,8 +6,10 @@ import org.bukkit.inventory.ItemStack;
 public class Pouch {
 
     private final String id;
+
     private final long minRange;
     private final long maxRange;
+
     private final ItemStack itemStack;
     private final EconomyType economyType;
 
