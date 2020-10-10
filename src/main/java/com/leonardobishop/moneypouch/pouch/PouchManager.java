@@ -48,10 +48,10 @@ public class PouchManager {
 
             ItemStack item = loadItemStack("pouches.tier." + s, config);
 
-            String economyTypeId = config.getString("pouches.tier." + s + ".options.economytype", "VAULT");
-
             long priceMin = config.getLong("pouches.tier." + s + ".pricerange.from", 0);
             long priceMax = config.getLong("pouches.tier." + s + ".pricerange.to", 0);
+
+            String economyTypeId = config.getString("pouches.tier." + s + ".options.economytype", "vault");
 
             EconomyType economyType = getEconomyType(economyTypeId);
 
@@ -66,18 +66,18 @@ public class PouchManager {
     }
 
     public EconomyType getEconomyType(String id) {
-        EconomyType type = this.economyTypes.get(id);
+        EconomyType type = this.economyTypes.get(id.toLowerCase());
         return type != null ? type : this.economyTypes.get("vault");
     }
 
     public void loadEconomyTypes() {
         this.economyTypes.clear();
 
-        economyTypes.put("Vault", new VaultEconomyType(
+        economyTypes.put("vault", new VaultEconomyType(
                 plugin.getConfig().getString("economy.prefixes.vault", "$"),
                 plugin.getConfig().getString("economy.suffixes.vault", "")));
 
-        economyTypes.put("XP", new XPEconomyType(
+        economyTypes.put("xp", new XPEconomyType(
                 plugin.getConfig().getString("economy.prefixes.xp", ""),
                 plugin.getConfig().getString("economy.suffixes.xp", " XP")));
 
