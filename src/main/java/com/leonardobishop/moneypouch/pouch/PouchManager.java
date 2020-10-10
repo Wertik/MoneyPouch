@@ -34,6 +34,11 @@ public class PouchManager {
     }
 
     public void load() {
+        loadEconomyTypes();
+        loadPouches();
+    }
+
+    public void loadPouches() {
 
         this.loadedPouches.clear();
 
@@ -48,10 +53,7 @@ public class PouchManager {
             long priceMin = config.getLong("pouches.tier." + s + ".pricerange.from", 0);
             long priceMax = config.getLong("pouches.tier." + s + ".pricerange.to", 0);
 
-            EconomyType economyType = loadEconomyType(economyTypeId);
-
-            if (economyType == null)
-                economyType = loadEconomyType("VAULT");
+            EconomyType economyType = getEconomyType(economyTypeId);
 
             String id = s.replace(" ", "_");
 
@@ -59,23 +61,27 @@ public class PouchManager {
 
             loadedPouches.put(id, pouch);
         }
+
+        plugin.getLogger().info("Loaded " + this.loadedPouches.size() + " pouch(es)...");
     }
 
-    private EconomyType loadEconomyType(String id) {
-        switch (id.toLowerCase()) {
-            case "vault":
-                if (!economyTypes.containsKey("Vault")) economyTypes.put("Vault", new VaultEconomyType(
-                        plugin.getConfig().getString("economy.prefixes.vault", "$"),
-                        plugin.getConfig().getString("economy.suffixes.vault", "")));
-                return economyTypes.get("Vault");
-            case "xp":
-                if (!economyTypes.containsKey("XP")) economyTypes.put("XP", new XPEconomyType(
-                        plugin.getConfig().getString("economy.prefixes.xp", ""),
-                        plugin.getConfig().getString("economy.suffixes.xp", " XP")));
-                return economyTypes.get("XP");
-            default:
-                return null;
-        }
+    public EconomyType getEconomyType(String id) {
+        EconomyType type = this.economyTypes.get(id);
+        return type != null ? type : this.economyTypes.get("vault");
+    }
+
+    public void loadEconomyTypes() {
+        this.economyTypes.clear();
+
+        economyTypes.put("Vault", new VaultEconomyType(
+                plugin.getConfig().getString("economy.prefixes.vault", "$"),
+                plugin.getConfig().getString("economy.suffixes.vault", "")));
+
+        economyTypes.put("XP", new XPEconomyType(
+                plugin.getConfig().getString("economy.prefixes.xp", ""),
+                plugin.getConfig().getString("economy.suffixes.xp", " XP")));
+
+        plugin.getLogger().info("Loaded " + this.economyTypes.size() + " economy type(s)...");
     }
 
     public ItemStack loadItemStack(String path, FileConfiguration config) {
