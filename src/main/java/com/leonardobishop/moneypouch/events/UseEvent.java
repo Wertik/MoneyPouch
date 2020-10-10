@@ -1,9 +1,9 @@
 package com.leonardobishop.moneypouch.events;
 
 import com.leonardobishop.moneypouch.Message;
-import com.leonardobishop.moneypouch.pouch.Pouch;
 import com.leonardobishop.moneypouch.PouchPlugin;
 import com.leonardobishop.moneypouch.StringUtil;
+import com.leonardobishop.moneypouch.pouch.Pouch;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -90,8 +90,6 @@ public class UseEvent implements Listener {
         new BukkitRunnable() {
             int position = 0;
 
-            final String prefixColour = StringUtil.color(plugin.getConfig().getString("pouches.title.prefix-colour"));
-            final String suffixColour = StringUtil.color(plugin.getConfig().getString("pouches.title.suffix-colour"));
             final String revealColour = StringUtil.color(plugin.getConfig().getString("pouches.title.reveal-colour"));
             final String obfuscateColour = StringUtil.color(plugin.getConfig().getString("pouches.title.obfuscate-colour"));
 
@@ -109,9 +107,10 @@ public class UseEvent implements Listener {
                 } else {
                     player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("pouches.sound.revealsound")), 3, 1);
 
-                    String prefix = prefixColour + p.getEconomyType().getPrefix();
+                    String prefix = StringUtil.color(p.getEconomyType().getPrefix());
+                    String suffix = StringUtil.color(p.getEconomyType().getSuffix());
+
                     StringBuilder viewedTitle = new StringBuilder();
-                    String suffix = suffixColour + p.getEconomyType().getSuffix();
 
                     for (int i = 0; i < position; i++) {
                         if (reversePouchReveal) {
@@ -153,15 +152,19 @@ public class UseEvent implements Listener {
                 }
 
                 if (position == number.length()) {
+
                     opening.remove(player.getUniqueId());
                     this.cancel();
+
                     if (player.isOnline()) {
+
                         player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("pouches.sound.endsound")), 3, 1);
-                        player.sendMessage(Message.PRIZE_MESSAGE.get()
+                        player.sendMessage(StringUtil.color(Message.PRIZE_MESSAGE.get()
                                 .replace("%prefix%", p.getEconomyType().getPrefix())
                                 .replace("%suffix%", p.getEconomyType().getSuffix())
-                                .replace("%prize%", String.valueOf(random)));
+                                .replace("%prize%", String.valueOf(random))));
                     }
+
                     try {
                         p.getEconomyType().processPayment(player, random);
                     } catch (Throwable t) {

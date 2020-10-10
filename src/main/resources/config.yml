@@ -59,8 +59,6 @@ pouches:
     subtitle: "&eOpening pouch..."
     obfuscate-colour: "&5"
     reveal-colour: "&6"
-    prefix-colour: "&a"
-    suffix-colour: "&a"
     obfuscate-digit-char: "#"
     obfuscate-format-char: "|"
     format:               # (adds commas e.g   $1,924,281)
@@ -73,11 +71,11 @@ reverse-pouch-reveal: true
 # Economy prefixes and suffixes
 economy:
   prefixes:
-    vault: "$"
+    vault: "&e$"
     xp: ""
   suffixes:
     vault: ""
-    xp: " XP"
+    xp: " &bXP"
 
 # Messages here
 messages:
